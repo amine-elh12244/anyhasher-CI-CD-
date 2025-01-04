@@ -32,7 +32,9 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Check code style
-      run: mvn checkstyle:check
+      run: |
+        mvn checkstyle:check
+      continue-on-error: false
 
   test:
     needs: [build]
@@ -45,5 +47,12 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: maven
-    - name: Run unit tests
-      run: mvn test
+    - name: Run tests with Maven
+      run: mvn test --batch-mode -Dmaven.test.failure.ignore=false
+    - name: Publish Test Report
+      uses: mikepenz/action-junit-report@v4
+      if: success() || failure()
+      with:
+        report_paths: '**/target/surefire-reports/TEST-*.xml'
+        detailed_summary: true
+        include_passed: true
